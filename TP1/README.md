@@ -28,7 +28,7 @@ y su DF (Document Frequency). Formato de salida: < termino > [ESP] < CF > [ESP] 
     * 1) La lista de los 10 terminos mas frecuentes y su CF (Collection Frequency)
     * 2) La lista de los 10 terminos menos frecuentes y su CF.
 
-### Sentencia dee ejecucuión:
+### Sentencia de ejecucuión:
 python punto_1.py <diretorio_corpus> <"y" or "n"> <archivo_stopword.txt>
 
 El campo <"y" or "n">, es para que se utilicen el archivo de stopwords o no.
@@ -47,7 +47,7 @@ token.
 
 Genere y almacene la misma informacion que en el caso anterior.
 
-### Sentencia dee ejecucuión:
+### Sentencia de ejecucuión:
 python punto_2.py <diretorio_corpus> <"y" or "n"> <archivo_stopword.txt>
 
 El campo <"y" or "n">, es para que se utilicen el archivo de stopwords o no.
