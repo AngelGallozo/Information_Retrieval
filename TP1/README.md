@@ -2,8 +2,8 @@
 ## Punto 1
 Escriba un programa que realice analisis lexico sobre la coleccion RI-tknz-data. El programa debe recibir
 como parametros el directorio donde se encuentran los documentos y un argumento que indica si se deben
-eliminar las palabras vac´ıas (y en tal caso, el nombre del archivo que las contiene). Defina, ademas, una longitud mınima y maxima para los terminos. Como salida, el programa debe generar:
-* a) Un archivo (terminos.txt) con la lista de t´erminos a indexar (ordenado), su frecuencia en la colecci´on
+eliminar las palabras vacıas (y en tal caso, el nombre del archivo que las contiene). Defina, ademas, una longitud mınima y maxima para los terminos. Como salida, el programa debe generar:
+* a) Un archivo (terminos.txt) con la lista de terminos a indexar (ordenado), su frecuencia en la coleccion
 y su DF (Document Frequency). Formato de salida: < termino > [ESP] < CF > [ESP] < DF >.
 
     Ejemplo:
@@ -33,12 +33,12 @@ python punto_1.py <diretorio_corpus> <"y" or "n"> <archivo_stopword.txt>
 
 El campo <"y" or "n">, es para que se utilicen el archivo de stopwords o no.
 
-El campo <archivo_stopword.txt>, nno necesita definirse si el argumento <"y" or "n"> es "n".
+El campo <archivo_stopword.txt>, no necesita definirse si el argumento <"y" or "n"> es "n".
 
 ## Punto 2
 Tomando como base el programa anterior, escriba un segundo T okenizer que implemente los criterios del
 artıculo de Grefenstette y Tapanainen para definir que es una “palabra” (o termino) y como tratar numeros
-y signos de puntuacion. Adem´as, extraiga en listas separadas utilizando en cada caso una funci´on especıfica.
+y signos de puntuacion. Ademas, extraiga en listas separadas utilizando en cada caso una funcion especıfica.
 * a) Abreviaturas tal cual estan escritas (por ejemplo, Dr., Lic., S.A., etc.)2
 * b) Direcciones de correo electronico y URLs.
 * c) Numeros (por ejemplo, cantidades, telefonos).
@@ -52,4 +52,4 @@ python punto_2.py <diretorio_corpus> <"y" or "n"> <archivo_stopword.txt>
 
 El campo <"y" or "n">, es para que se utilicen el archivo de stopwords o no.
 
-El campo <archivo_stopword.txt>, nno necesita definirse si el argumento <"y" or "n"> es "n".
+El campo <archivo_stopword.txt>, no necesita definirse si el argumento <"y" or "n"> es "n".
