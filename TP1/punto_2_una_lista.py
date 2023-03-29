@@ -9,9 +9,41 @@ import re
 
 #Variables
 long_min = 2   #longitud minimma del token
-long_max = 30  #longitud maxima del token
+long_max = 50  #longitud maxima del token
+limit_top_frec = 10 #Limite del Top de frecuencias
 list_term_lowest_sort = []
 list_term_highest_sort = []
+
+
+# Expresiones Regulares
+regex_alpha_words = re.compile(r'(^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+$)') # Cadenas alfanumericas con y sin acentos
+regex_abrev_1 = re.compile(r'\b[A-Z][a-z]+\.') # Abreviaturas como: Dir.
+regex_abrev_2 = re.compile(r'\b[a-z]+\.') # Abreviaturas como: etc.
+regex_emails = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}')  #Correos electronicos
+
+#Expresiones Regulares - Cantidades y Telefonos
+regex_tel_1 = re.compile(r'^\+[0-9]{10,13}') # numeros de tel como: +541122334455
+regex_tel_2 = re.compile(r'^[0]+[0-9]{2}-[0-9]{8}') # numeros de tel como: 011-22334455
+regex_tel_3 = re.compile(r'[0-9]{2,3}-[0-9]{2,3}-[0-9]{3,}-*[0-9]{2}') # numeros de tel como: 022-333-55555 o 11-22-333-33
+regex_int_posit = re.compile(r'^[0-9]+$') # Numeros enteros positivos 
+regex_int_negat = re.compile(r'^-[0-9]+$') # Numeros enteros negativos
+regex_float_point_posit = re.compile(r'^[0-9]{1,}\.[0-9]+') # Numeros reales con punto positivos
+regex_float_point_negat = re.compile(r'^-{1}[0-9]{1,}\.[0-9]+') # Numeros reales negativos con punto
+regex_float_coma_posit = re.compile(r'^[0-9]{1,}\,[0-9]+') # Numeros reales con coma positivos
+regex_float_coma_negat = re.compile(r'^-{1}[0-9]{1,}\,[0-9]+') # Numeros reales negativos con coma
+
+# Expresiones Regulares- URLs
+regex_url_1 = re.compile(r'http[s]?://(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])+') # URLs como: http o https
+regex_url_2 = re.compile(r'^www\.(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])') # URL como: www. ejemplo.com.ar 
+
+# Listas de terminos
+list_terms={}
+list_terms_urls = {}
+list_terms_aplhanum_words = {}
+list_terms_abrev = {}
+list_terms_emails = {}
+list_terms_names = {}
+
 
 
 def normalize(token):
@@ -31,20 +63,20 @@ def store_terms_lowest_frec(key,frecuency):
     if len(list_term_lowest_sort)==0:
         list_term_lowest_sort.append([key,frecuency])
     else:
-        below_limit_10 = len(list_term_lowest_sort)<10
+        below_limit_top = len(list_term_lowest_sort)<limit_top_frec
         for index in range( 0,len(list_term_lowest_sort)):
             term_frec = list_term_lowest_sort[index][1]
-            if index < 10:
+            if index < limit_top_frec:
                 if  frecuency <= term_frec:
                     list_term_lowest_sort.insert(index,[key,frecuency])
-                    if not below_limit_10:
-                        list_term_lowest_sort = list_term_lowest_sort[:10]
+                    if not below_limit_top:
+                        list_term_lowest_sort = list_term_lowest_sort[:limit_top_frec]
                     break
                 else:
                     if index == len(list_term_lowest_sort)-1:
                         list_term_lowest_sort.append([key,frecuency])
-                        if not below_limit_10:
-                            list_term_lowest_sort = list_term_lowest_sort[:10]
+                        if not below_limit_top:
+                            list_term_lowest_sort = list_term_lowest_sort[:limit_top_frec]
                         break
                 
                 
@@ -53,13 +85,13 @@ def store_terms_highest_frec(key,frecuency):
     if len(list_term_highest_sort)==0:
         list_term_highest_sort.append([key,frecuency])
     else:
-        below_limit_10 = len(list_term_highest_sort)<10
+        below_limit_top = len(list_term_highest_sort)<limit_top_frec
         for index in range( 0,len(list_term_highest_sort)):
             term_frec = list_term_highest_sort[index][1]
-            if ( frecuency >= term_frec and index < 9 ):
+            if ( frecuency >= term_frec and index < limit_top_frec-1 ):
                 list_term_highest_sort.insert(index,[key,frecuency])
-                if not below_limit_10:
-                    list_term_highest_sort = list_term_highest_sort[:10]
+                if not below_limit_top:
+                    list_term_highest_sort = list_term_highest_sort[:limit_top_frec]
                 break
 
                     
@@ -82,33 +114,49 @@ def delete_caracteres(token, caracteres):
 # Extrae los tokens en una lista
 def tokenizer(line):
     result = []
-    initial_list_split = re.split(' ', line)
+    initial_list_split = line.split()
+    
+    # Analisis de URL
     for token in initial_list_split:
-        result = result + re.findall(r'(^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+$)',delete_caracteres(token,',.;:/\\')) 
-        result = result + re.findall(r'\b[A-Z][a-z]+\.',token) # Abreviaturas como: Dir.
-        result = result + re.findall(r'\b[a-z]+\.',token) # Abreviaturas como: etc.
-        result = result + re.findall(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}',token) #Correos electronicos
-        result = result + re.findall(r'^\+[0-9]{10,13}',token) # numeros de tel como: +541122334455
-        result = result + re.findall(r'^[0]+[0-9]{2}-[0-9]{8}',token) # numeros de tel como: 011-22334455
-        result = result + re.findall(r'[0-9]{2,3}-[0-9]{2,3}-[0-9]{3,}-*[0-9]{2}',token) # numeros de tel como: 022-333-55555 o 11-22-333-33
-        result = result + re.findall(r'^[0-9]{1,}\.[0-9]+',token) # Numeros reales con punto
-        result = result + re.findall(r'^[0-9]{1,}\,[0-9]+',token) # Numeros reales con coma
-        result = result + re.findall(r'^-{1}[0-9]{1,}\.[0-9]+',token) # Numeros reales negativos con punto
-        result = result + re.findall(r'^-{1}[0-9]{1,}\,[0-9]+',token) # Numeros reales negativos con coma
-        #result = result + re.findall(r'^[0-9]+$',token) # Numeros enteros positivos , la exp-alfanumerica ya los obtiene
-        result = result + re.findall(r'^-[0-9]+$',token) # Numeros enteros negativos
+        is_url_type_1 = re.match(regex_url_1,token) 
+        is_url_type_2 = re.match(regex_url_2,token) 
+        
+        if is_url_type_1 or is_url_type_2:
+            result.append(token)
+            url_divided_tokens = re.sub("[./#-?=&_:]", " ", token) # Divide el string URL con espacios
+            initial_list_split = initial_list_split + url_divided_tokens.split() # Agrega cada elemento del string URL en la lista inicial
+            initial_list_split.remove(token) #Remuevo la url ya analizada
+        
+    # Analisis otros patrones
+    for token in initial_list_split:
+        result = result + re.findall(regex_alpha_words,delete_caracteres(token,',.;:/\\')) 
+        
+        result = result + re.findall(regex_abrev_1,token) 
+        result = result + re.findall(regex_abrev_2,token) 
+        
+        result = result + re.findall(regex_emails,token) 
+        
+        result = result + re.findall(regex_tel_1,token) 
+        result = result + re.findall(regex_tel_2,token) 
+        result = result + re.findall(regex_tel_3,token) 
+        
+        result = result + re.findall(regex_float_point_posit,token) 
+        result = result + re.findall(regex_float_coma_posit,token) 
+        result = result + re.findall(regex_float_point_negat,token) 
+        result = result + re.findall(regex_float_coma_negat,token) 
+        #result = result + re.findall(regex_int_posit,token) 
+        result = result + re.findall(regex_int_negat,token) 
+        
     return result
     
 def main():
     if len(sys.argv) < 3:
         print('Es necesario pasar como argumentos: un path al corpus , usar_stop_word("y" or "n") , nombre_Archivo_stopwords(opcional en caso de que no)')        
         sys.exit(0)
-    
-    
+        
     dirname = sys.argv[1]
     # Reviso si el argumento de usar stopwords
     use_stopword = True if sys.argv[2].lower() == 'y' else False
-    list_terms = {}
     file_index = 0 # Identifica a cada archivo con id incremental (ademas, sirve para tener la cantidad de archivos total)
     tokens_counter = 0
     terms_counter = 0
@@ -173,6 +221,7 @@ def main():
             file_index += 1    
     
     #Al final guardo las listas de terminos com su DF y TF  en el archivo "terminos.txt"
+    
     arch_terms_salida = open("terminos.txt", "x",encoding='utf-8')
     terms_ordered = sorted(list_terms.keys())
     cant_term_doc_long = 0
@@ -223,7 +272,7 @@ def main():
     #print("doc_largo: "+str(id_doc_long)+" doc_corto: "+str(id_doc_short))
     
     #Gestion archivo de "frecuencias.txt"
-    save_frecuencies_in_file(list_term_highest_sort,list_term_lowest_sort,"frecuencies.txt")
+    save_frecuencies_in_file(list_term_highest_sort,list_term_lowest_sort,"frecuencias.txt")
     
     
     
