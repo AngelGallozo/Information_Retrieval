@@ -16,9 +16,8 @@ list_term_highest_sort = []
 
 
 # Expresiones Regulares
-regex_alpha_words = re.compile(r'(^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]+$)') # Cadenas alfanumericas con y sin acentos
-regex_abrev_1 = re.compile(r'\b[A-Z][a-z]+\.') # Abreviaturas como: Dir.
-regex_abrev_2 = re.compile(r'\b[a-z]+\.') # Abreviaturas como: etc.
+regex_alpha_words = re.compile(r'[^a-zA-Z0-9]') # Cadenas alfanumericas con y sin acentos
+regex_abrev = re.compile(r'\b[A-Za-z]{1,2}\.\b') # Abreviaturas como: Dir.
 regex_emails = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}')  #Correos electronicos
 
 #Expresiones Regulares - Cantidades y Telefonos
@@ -115,9 +114,10 @@ def delete_caracteres(token, caracteres):
 def tokenizer(line):
     result = []
     initial_list_split = line.split()
-    
+        
     # Analisis de URL
     for token in initial_list_split:
+            
         is_url_type_1 = re.match(regex_url_1,token) 
         is_url_type_2 = re.match(regex_url_2,token) 
         
@@ -129,10 +129,9 @@ def tokenizer(line):
         
     # Analisis otros patrones
     for token in initial_list_split:
-        result = result + re.findall(regex_alpha_words,delete_caracteres(token,',.;:/\\')) 
+        result.append(re.sub(regex_alpha_words,'',token))
         
-        result = result + re.findall(regex_abrev_1,token) 
-        result = result + re.findall(regex_abrev_2,token) 
+        result = result + re.findall(regex_abrev,token) 
         
         result = result + re.findall(regex_emails,token) 
         
@@ -143,9 +142,9 @@ def tokenizer(line):
         result = result + re.findall(regex_float_point_posit,token) 
         result = result + re.findall(regex_float_coma_posit,token) 
         result = result + re.findall(regex_float_point_negat,token) 
-        result = result + re.findall(regex_float_coma_negat,token) 
-        #result = result + re.findall(regex_int_posit,token) 
+        result = result + re.findall(regex_float_coma_negat,token)
         result = result + re.findall(regex_int_negat,token) 
+        
         
     return result
     
@@ -193,7 +192,6 @@ def main():
                                 term_long_acept = term != '' #Termino aceptable luego de Normalizacion?
                                 
                                 if term_long_acept:
-                                    sum_long_terms += len(term)
                                     if term in list_terms:
                                         if file_index in list_terms[term]:
                                             list_terms[term][file_index] +=1
@@ -202,6 +200,10 @@ def main():
                                     else:
                                         list_terms[term]={}
                                         list_terms[term][file_index] = 1
+                                        # Guardo la cantidad total de terminos  
+                                        terms_counter +=1
+                                        # Guardo la suma de longitudes de terminos
+                                        sum_long_terms+=len(term)
             
             #Para que se quede como minima la cantidad del primer documento
             if cant_tokens_doc_short == 0: 
@@ -223,7 +225,7 @@ def main():
     #Al final guardo las listas de terminos com su DF y TF  en el archivo "terminos.txt"
     
     arch_terms_salida = open("terminos.txt", "x",encoding='utf-8')
-    terms_ordered = sorted(list_terms.keys())
+    terms_ordered = sorted(list_terms.keys())  
     cant_term_doc_long = 0
     cant_term_doc_short = 0
     cant_term_collecfrec_1 = 0
@@ -236,13 +238,10 @@ def main():
             
             # Conteo de termnos de documento mas largo y mas corto
             if key == id_doc_long:
-                cant_term_doc_long += value
+                cant_term_doc_long += 1
                  
             if key == id_doc_short:
-                cant_term_doc_short += value
-        
-        # Guardo la cantidad total de terminos         
-        terms_counter += frecuency
+                cant_term_doc_short += 1
         
         # Guardar cantidad de terminos que tienen frecuencia 1.
         if frecuency == 1:
@@ -256,11 +255,11 @@ def main():
     arch_terms_salida.close()
 
     # Calculo de promedios
-    avg_terms_in_doc = round(terms_counter/file_index, 2)
-    avg_tokens_in_doc = round(tokens_counter/file_index, 2)
-    avg_long_terms = round(sum_long_terms/terms_counter, 2)
+    avg_terms_in_doc = round(terms_counter/file_index, 5)
+    avg_tokens_in_doc = round(tokens_counter/file_index, 5)
+    avg_long_terms = round(sum_long_terms/terms_counter, 5)
     
-    #Gestion de archivo "estadisticas.txt"
+    # Gestion de archivo "estadisticas.txt"
     arch_stats_salida = open("estadisticas.txt", "x",encoding='utf-8')
     arch_stats_salida.write(str(file_index)+"\n")
     arch_stats_salida.write(str(tokens_counter)+' '+ str(terms_counter)+"\n")
@@ -269,7 +268,6 @@ def main():
     arch_stats_salida.write(str(cant_tokens_doc_long)+' '+ str(cant_term_doc_long)+' '+str(cant_tokens_doc_short)+' '+ str(cant_term_doc_short)+"\n")
     arch_stats_salida.write(str(cant_term_collecfrec_1)+"\n")
     arch_stats_salida.close()
-    #print("doc_largo: "+str(id_doc_long)+" doc_corto: "+str(id_doc_short))
     
     #Gestion archivo de "frecuencias.txt"
     save_frecuencies_in_file(list_term_highest_sort,list_term_lowest_sort,"frecuencias.txt")
