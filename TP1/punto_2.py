@@ -136,7 +136,6 @@ def tokenizer(line):
         if is_url_type_1 or is_url_type_2:
             #Almaceno en lista separada para urls
             insert_in_list(token,'urls')
-             
             result.append(token)
             url_divided_tokens = re.sub("[./#-?=&_:]", " ", token) # Divide el string URL con espacios
             initial_list_split = initial_list_split + url_divided_tokens.split() # Agrega cada elemento del string URL en la lista inicial
@@ -147,8 +146,8 @@ def tokenizer(line):
         
         word = re.sub(regex_alpha_words,'',token)
         if word != '' and len(word)>long_min:
-            result.append(token)
-            insert_in_list(token,'words')
+            result.append(word)
+            insert_in_list(word,'words')
         
         if regex_abrev.match(token):
             result.append(token)
