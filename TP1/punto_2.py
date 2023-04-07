@@ -35,12 +35,13 @@ regex_float_coma_negat = re.compile(r'^-{1}[0-9]{1,}\,[0-9]+') # Numeros reales 
 regex_url_1 = re.compile(r'http[s]?://(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])+') # URLs como: http o https
 regex_url_2 = re.compile(r'^www\.(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])') # URL como: www. ejemplo.com.ar 
 
+# Expresiones Regulares- Nombre Propios
+regex_nombres_propios = re.compile(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b') 
+
 # Listas de terminos
 list_terms={}
 
-
-
-
+# Almaceno los tokens por sus tipos
 list_separada = {}
 
 
@@ -104,11 +105,18 @@ def store_terms_highest_frec(key,frecuency):
         below_limit_top = len(list_term_highest_sort)<limit_top_frec
         for index in range( 0,len(list_term_highest_sort)):
             term_frec = list_term_highest_sort[index][1]
-            if ( frecuency >= term_frec and index < limit_top_frec-1 ):
+            
+            if ( frecuency >= term_frec):
                 list_term_highest_sort.insert(index,[key,frecuency])
-                if not below_limit_top:
-                    list_term_highest_sort = list_term_highest_sort[:limit_top_frec]
                 break
+            else:
+                if index == len(list_term_highest_sort)-1:
+                    list_term_highest_sort.insert(index,[key,frecuency])
+        
+        if not below_limit_top:
+            list_term_highest_sort = list_term_highest_sort[:limit_top_frec]
+            
+                    
 
                     
 def save_frecuencies_in_file(list_highest,list_lowest,file_name):
@@ -125,6 +133,14 @@ def save_frecuencies_in_file(list_highest,list_lowest,file_name):
 # Extrae los tokens en una lista
 def tokenizer(line):
     result = []
+    
+    # Analisis de Nombre Propios
+    nombre_propio = regex_nombres_propios.findall(line)
+    if len(nombre_propio)>0:
+        result.append(nombre_propio[0])
+        insert_in_list(nombre_propio[0],'nombres_propios')
+        # line.replace(nombre_propio[0], "")
+    
     initial_list_split = line.split()
         
     # Analisis de URL
@@ -157,13 +173,13 @@ def tokenizer(line):
             insert_in_list(token,'emails')
         if regex_tel_1.match(token):
             result.append(token)
-            insert_in_list(token,'telefonos')
+            insert_in_list(token,'cantidades')
         if regex_tel_2.match(token):
             result.append(token)
-            insert_in_list(token,'telefonos')
+            insert_in_list(token,'cantidades')
         if regex_tel_3.match(token):
             result.append(token)
-            insert_in_list(token,'telefonos')
+            insert_in_list(token,'cantidades')
         if regex_float_point_posit.match(token):
             result.append(token)
             insert_in_list(token,'cantidades')
@@ -185,7 +201,6 @@ def tokenizer(line):
         if regex_int_negat.match(token):
             result.append(token)
             insert_in_list(token,'cantidades')
-        
     return result
     
 def main():
