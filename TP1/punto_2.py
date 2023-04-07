@@ -37,11 +37,11 @@ regex_url_2 = re.compile(r'^www\.(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])') #
 
 # Listas de terminos
 list_terms={}
-list_terms_urls = {}
-list_terms_aplhanum_words = {}
-list_terms_abrev = {}
-list_terms_emails = {}
-list_terms_names = {}
+
+
+
+
+list_separada = {}
 
 
 
@@ -78,7 +78,24 @@ def store_terms_lowest_frec(key,frecuency):
                             list_term_lowest_sort = list_term_lowest_sort[:limit_top_frec]
                         break
                 
-                
+#Inserta el token en una determinada lista
+def insert_in_list(token,list_key):
+    if list_key in list_separada:
+        list_separada[list_key].append(token)
+    else:
+        list_separada[list_key] = [token]
+
+#Almacenar en archivos las listas separadas segun tipo de token
+def save_list_separada():
+    for key,value in list_separada.items():
+        arch_salida = open(f'{key}.txt', "x",encoding='utf-8')
+        
+        for token in value:
+            arch_salida.write(token+"\n")
+            
+        arch_salida.close()
+
+
 def store_terms_highest_frec(key,frecuency):
     global list_term_highest_sort
     if len(list_term_highest_sort)==0:
@@ -104,11 +121,6 @@ def save_frecuencies_in_file(list_highest,list_lowest,file_name):
         for term_low in list_lowest:
             file_out.write(term_low[0]+' '+ str(term_low[1])+"\n")
     file_out.close()
-
-# Borra de una cadena los caracteres que le pasen                 
-def delete_caracteres(token, caracteres):
-    table = str.maketrans('','',caracteres)
-    return token.translate(table)
     
 # Extrae los tokens en una lista
 def tokenizer(line):
@@ -122,6 +134,9 @@ def tokenizer(line):
         is_url_type_2 = re.match(regex_url_2,token) 
         
         if is_url_type_1 or is_url_type_2:
+            #Almaceno en lista separada para urls
+            insert_in_list(token,'urls')
+             
             result.append(token)
             url_divided_tokens = re.sub("[./#-?=&_:]", " ", token) # Divide el string URL con espacios
             initial_list_split = initial_list_split + url_divided_tokens.split() # Agrega cada elemento del string URL en la lista inicial
@@ -129,22 +144,48 @@ def tokenizer(line):
         
     # Analisis otros patrones
     for token in initial_list_split:
-        result.append(re.sub(regex_alpha_words,'',token))
         
-        result = result + re.findall(regex_abrev,token) 
+        word = re.sub(regex_alpha_words,'',token)
+        if word != '' and len(word)>long_min:
+            result.append(token)
+            insert_in_list(token,'words')
         
-        result = result + re.findall(regex_emails,token) 
-        
-        result = result + re.findall(regex_tel_1,token) 
-        result = result + re.findall(regex_tel_2,token) 
-        result = result + re.findall(regex_tel_3,token) 
-        
-        result = result + re.findall(regex_float_point_posit,token) 
-        result = result + re.findall(regex_float_coma_posit,token) 
-        result = result + re.findall(regex_float_point_negat,token) 
-        result = result + re.findall(regex_float_coma_negat,token)
-        result = result + re.findall(regex_int_negat,token) 
-        
+        if regex_abrev.match(token):
+            result.append(token)
+            insert_in_list(token,'abreviaturas')
+        if regex_emails.match(token):
+            result.append(token)
+            insert_in_list(token,'emails')
+        if regex_tel_1.match(token):
+            result.append(token)
+            insert_in_list(token,'telefonos')
+        if regex_tel_2.match(token):
+            result.append(token)
+            insert_in_list(token,'telefonos')
+        if regex_tel_3.match(token):
+            result.append(token)
+            insert_in_list(token,'telefonos')
+        if regex_float_point_posit.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
+        if regex_float_point_posit.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
+        if regex_float_coma_posit.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
+        if regex_float_point_negat.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
+        if regex_float_point_negat.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
+        if regex_float_point_negat.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
+        if regex_int_negat.match(token):
+            result.append(token)
+            insert_in_list(token,'cantidades')
         
     return result
     
@@ -272,6 +313,8 @@ def main():
     #Gestion archivo de "frecuencias.txt"
     save_frecuencies_in_file(list_term_highest_sort,list_term_lowest_sort,"frecuencias.txt")
     
+    #Guardar listas separadas por token en archivo.
+    save_list_separada()
     
     
 if __name__ == '__main__':
