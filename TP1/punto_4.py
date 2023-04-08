@@ -2,9 +2,13 @@
 # normaliza los tokens que se encuentran dentro, y al final genera un diccionario,
 #Calucla el DF y TF de todos los terminos que sera escrito en un archivo de salida
 import sys
+# Usando la libreria para Stemming para Espaniol
+import re
 from os import listdir
 from os.path import join, isdir
-import re
+from nltk import LancasterStemmer
+from nltk.stem import PorterStemmer
+from time import time
 
 
 #Variables
@@ -17,37 +21,30 @@ list_term_highest_sort = []
 
 # Expresiones Regulares
 regex_alpha_words = re.compile(r'[^a-zA-Z0-9]') # Cadenas alfanumericas con y sin acentos
-regex_abrev = re.compile(r'\b[A-Za-z]{1,2}\.\b') # Abreviaturas como: Dir.
-regex_emails = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}')  #Correos electronicos
-
-#Expresiones Regulares - Cantidades y Telefonos
-regex_tel_1 = re.compile(r'^\+[0-9]{10,13}') # numeros de tel como: +541122334455
-regex_tel_2 = re.compile(r'^[0]+[0-9]{2}-[0-9]{8}') # numeros de tel como: 011-22334455
-regex_tel_3 = re.compile(r'[0-9]{2,3}-[0-9]{2,3}-[0-9]{3,}-*[0-9]{2}') # numeros de tel como: 022-333-55555 o 11-22-333-33
-regex_int_posit = re.compile(r'^[0-9]+$') # Numeros enteros positivos 
-regex_int_negat = re.compile(r'^-[0-9]+$') # Numeros enteros negativos
-regex_float_point_posit = re.compile(r'^[0-9]{1,}\.[0-9]+') # Numeros reales con punto positivos
-regex_float_point_negat = re.compile(r'^-{1}[0-9]{1,}\.[0-9]+') # Numeros reales negativos con punto
-regex_float_coma_posit = re.compile(r'^[0-9]{1,}\,[0-9]+') # Numeros reales con coma positivos
-regex_float_coma_negat = re.compile(r'^-{1}[0-9]{1,}\,[0-9]+') # Numeros reales negativos con coma
-
-# Expresiones Regulares- URLs
-regex_url_1 = re.compile(r'http[s]?://(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])+') # URLs como: http o https
-regex_url_2 = re.compile(r'^www\.(?:[A-Za-z]|[0-9]|[+_@$-.&]|[*,!/:?=#\(\)])') # URL como: www. ejemplo.com.ar 
-
-# Expresiones Regulares- Nombre Propios
-regex_nombres_propios = re.compile(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b') 
 
 # Listas de terminos
 list_terms={}
 
-# Almaceno los tokens por sus tipos
-list_separada = {}
 
-
-
+def main():
+    ini_time = time()
+    procesar_docs('Porter')
+    print("Tiempo Stemming Porter: "+ str(time()-ini_time))
+    
+    ini_time = time()
+    procesar_docs('Lancaster')
+    print("Tiempo Stemming Lancaster: "+ str(time()-ini_time))
+    
 def normalize(token):
     return token.lower()
+
+def stemming(token,tipo_stemmer):
+    if(tipo_stemmer == 'Porter'):
+        stemmer = PorterStemmer()
+    if(tipo_stemmer == 'Lancaster'):
+        stemmer = LancasterStemmer()
+    return stemmer.stem(token)
+    
 
 def retrieve_stopword(file_stopword):
     list_sw = []
@@ -79,23 +76,6 @@ def store_terms_lowest_frec(key,frecuency):
                             list_term_lowest_sort = list_term_lowest_sort[:limit_top_frec]
                         break
                 
-#Inserta el token en una determinada lista
-def insert_in_list(token,list_key):
-    if list_key in list_separada:
-        list_separada[list_key].append(token)
-    else:
-        list_separada[list_key] = [token]
-
-#Almacenar en archivos las listas separadas segun tipo de token
-def save_list_separada():
-    for key,value in list_separada.items():
-        arch_salida = open(f'{key}.txt', "x",encoding='utf-8')
-        
-        for token in value:
-            arch_salida.write(token+"\n")
-            
-        arch_salida.close()
-
 
 def store_terms_highest_frec(key,frecuency):
     global list_term_highest_sort
@@ -133,29 +113,7 @@ def save_frecuencies_in_file(list_highest,list_lowest,file_name):
 # Extrae los tokens en una lista
 def tokenizer(line):
     result = []
-    
-    # Analisis de Nombre Propios
-    # nombres_propios = regex_nombres_propios.findall(line)
-    # if len(nombres_propios)>0:
-    #     result = result + nombres_propios
-    #     for element in nombres_propios:
-    #         insert_in_list(element,'nombres_propios')
-    
     initial_list_split = line.split()
-        
-    # Analisis de URL
-    for token in initial_list_split:
-            
-        is_url_type_1 = re.match(regex_url_1,token) 
-        is_url_type_2 = re.match(regex_url_2,token) 
-        
-        if is_url_type_1 or is_url_type_2:
-            #Almaceno en lista separada para urls
-            insert_in_list(token,'urls')
-            result.append(token)
-            url_divided_tokens = re.sub("[./#-?=&_:]", " ", token) # Divide el string URL con espacios
-            initial_list_split = initial_list_split + url_divided_tokens.split() # Agrega cada elemento del string URL en la lista inicial
-            initial_list_split.remove(token) #Remuevo la url ya analizada
         
     # Analisis otros patrones
     for token in initial_list_split:
@@ -163,47 +121,9 @@ def tokenizer(line):
         word = re.sub(regex_alpha_words,'',token)
         if word != '' and len(word)>long_min:
             result.append(word)
-            insert_in_list(word,'words')
-        
-        if regex_abrev.match(token):
-            result.append(token)
-            insert_in_list(token,'abreviaturas')
-        if regex_emails.match(token):
-            result.append(token)
-            insert_in_list(token,'emails')
-        if regex_tel_1.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_tel_2.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_tel_3.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_float_point_posit.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_float_point_posit.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_float_coma_posit.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_float_point_negat.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_float_point_negat.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_float_point_negat.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
-        if regex_int_negat.match(token):
-            result.append(token)
-            insert_in_list(token,'cantidades')
     return result
     
-def main():
+def procesar_docs(tipo_stemmer):
     if len(sys.argv) < 3:
         print('Es necesario pasar como argumentos: un path al corpus , usar_stop_word("y" or "n") , nombre_Archivo_stopwords(opcional en caso de que no)')        
         sys.exit(0)
@@ -231,7 +151,6 @@ def main():
             
         for filename in listdir(dirname):
             filepath = join(dirname, filename)
-            print(f"Processing file: {filepath}")
             with open(filepath,'r',encoding='utf-8') as f:
                 tokens_counter_for_doc = 0
                 for line in f:
@@ -244,8 +163,8 @@ def main():
                             tokens_counter_for_doc +=1
                             if (not token_in_stopwords):
                                 term = normalize(token)
+                                term = stemming(term,tipo_stemmer)                                
                                 term_long_acept = term != '' #Termino aceptable luego de Normalizacion?
-                                
                                 if term_long_acept:
                                     if term in list_terms:
                                         if file_index in list_terms[term]:
@@ -279,7 +198,7 @@ def main():
     
     #Al final guardo las listas de terminos com su DF y TF  en el archivo "terminos.txt"
     
-    arch_terms_salida = open("terminos.txt", "x",encoding='utf-8')
+    arch_terms_salida = open(f'terminos_Stemming_{tipo_stemmer}.txt', "x",encoding='utf-8')
     terms_ordered = sorted(list_terms.keys())  
     cant_term_doc_long = 0
     cant_term_doc_short = 0
@@ -315,7 +234,7 @@ def main():
     avg_long_terms = round(sum_long_terms/terms_counter, 5)
     
     # Gestion de archivo "estadisticas.txt"
-    arch_stats_salida = open("estadisticas.txt", "x",encoding='utf-8')
+    arch_stats_salida = open(f'estadisticas_Stemming_{tipo_stemmer}.txt', "x",encoding='utf-8')
     arch_stats_salida.write(str(file_index)+"\n")
     arch_stats_salida.write(str(tokens_counter)+' '+ str(terms_counter)+"\n")
     arch_stats_salida.write(str(avg_tokens_in_doc)+' '+ str(avg_terms_in_doc)+"\n")
@@ -325,11 +244,7 @@ def main():
     arch_stats_salida.close()
     
     #Gestion archivo de "frecuencias.txt"
-    save_frecuencies_in_file(list_term_highest_sort,list_term_lowest_sort,"frecuencias.txt")
-    
-    #Guardar listas separadas por token en archivo.
-    save_list_separada()
-    
+    save_frecuencies_in_file(list_term_highest_sort,list_term_lowest_sort,f'frecuencias_Stemming_{tipo_stemmer}.txt')
     
 if __name__ == '__main__':
     main()
