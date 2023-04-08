@@ -20,7 +20,7 @@ list_term_highest_sort = []
 
 
 # Expresiones Regulares
-regex_alpha_words = re.compile(r'[^a-zA-Z0-9]') # Cadenas alfanumericas con y sin acentos
+regex_alpha_words = re.compile(r'[^a-zA-Z0-9]') # Cadenas alfanumericas sin acentos
 
 # Listas de terminos
 list_terms={}

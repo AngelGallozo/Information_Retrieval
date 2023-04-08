@@ -20,7 +20,7 @@ list_term_highest_sort = []
 
 
 # Expresiones Regulares
-regex_alpha_words = re.compile(r'[^a-zA-Z0-9]') # Cadenas alfanumericas con y sin acentos
+regex_alpha_words = re.compile(r'[^a-zA-Z0-9]') # Cadenas alfanumericas sin acentos
 regex_abrev = re.compile(r'\b[A-Za-z]{1,2}\.\b') # Abreviaturas como: Dir.
 regex_emails = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}')  #Correos electronicos
 
