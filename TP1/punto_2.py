@@ -135,11 +135,11 @@ def tokenizer(line):
     result = []
     
     # Analisis de Nombre Propios
-    # nombres_propios = regex_nombres_propios.findall(line)
-    # if len(nombres_propios)>0:
-    #     result = result + nombres_propios
-    #     for element in nombres_propios:
-    #         insert_in_list(element,'nombres_propios')
+    nombres_propios = regex_nombres_propios.findall(line)
+    if len(nombres_propios)>0:
+        result = result + nombres_propios
+        for element in nombres_propios:
+            insert_in_list(element,'nombres_propios')
     
     initial_list_split = line.split()
         
