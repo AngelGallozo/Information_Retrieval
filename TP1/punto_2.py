@@ -140,6 +140,7 @@ def tokenizer(line):
         result = result + nombres_propios
         for element in nombres_propios:
             insert_in_list(element,'nombres_propios')
+            line= re.sub(re.escape(element)," ",line) #Remuevo Nombre Propio ya analizado
     
     initial_list_split = line.split()
         
@@ -157,6 +158,11 @@ def tokenizer(line):
             initial_list_split = initial_list_split + url_divided_tokens.split() # Agrega cada elemento del string URL en la lista inicial
             initial_list_split.remove(token) #Remuevo la url ya analizada
         
+        if regex_emails.match(token):
+            result.append(token)
+            insert_in_list(token,'emails')
+            initial_list_split.remove(token) #Remuevo email ya analizado
+        
     # Analisis otros patrones
     for token in initial_list_split:
         
@@ -168,9 +174,7 @@ def tokenizer(line):
         if regex_abrev.match(token):
             result.append(token)
             insert_in_list(token,'abreviaturas')
-        if regex_emails.match(token):
-            result.append(token)
-            insert_in_list(token,'emails')
+        
         if regex_tel_1.match(token):
             result.append(token)
             insert_in_list(token,'cantidades')
