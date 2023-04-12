@@ -10,6 +10,7 @@ import re
 from os import listdir
 from os.path import join, isdir
 from nltk.stem.snowball import SpanishStemmer
+from unidecode import unidecode
 
 #Variables
 long_min = 2   #longitud minimma del token
@@ -26,7 +27,8 @@ list_terms={}
 
 
 def normalize(token):
-    return token.lower()
+    new_token = unicode(token)
+    return new_token.lower()
     
 
 def retrieve_stopword(file_stopword):
