@@ -41,9 +41,8 @@ def main():
                         else:
                             list_terms[term]= 1
                             terms_uniq +=1
-        
-            # Escribimos en el archivo
-            arch_salida.write(str(terms_total)+' '+str(terms_uniq)+"\n")
+                    # Escribimos en el archivo
+                    arch_salida.write(str(terms_total)+' '+str(terms_uniq)+"\n")
         arch_salida.close()
 
 if __name__ == '__main__':
